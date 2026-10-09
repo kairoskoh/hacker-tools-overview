@@ -14,7 +14,3 @@ Open `index.html` in any browser, or host it with GitHub Pages.
 ## Usage & disclaimer
 
 These are legitimate, publicly documented security tools for **authorized testing, incident response, and defense only**. Use them only on systems you own or have written permission to test. Example commands and flag descriptions reflect standard documented usage, not SANS courseware.
-
-## Hosting with GitHub Pages
-
-In the repo: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, pick `main` / `/root`, save. The page will be served at `https://<username>.github.io/<repo>/`.
